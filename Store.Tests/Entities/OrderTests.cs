@@ -1,4 +1,5 @@
 using System;
+using System.Diagnostics;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Store.Domain;
 using Store.Domain.Entities;
@@ -12,38 +13,81 @@ namespace Store.Tests.Entities
     [TestClass]
     public class OrderTests
     {
-        private readonly Customer _customer = new Customer("João Silva", "joao@gmail.com");
-        private readonly Discount _discount = new Discount(0, DateTime.Now.AddDays(5));
-        private readonly Product _product = new Product("Mouses wirelles", 100, true);
+        private readonly Customer _customer = new Customer("André Baltieri", "andre@balta.io");
+        private readonly Product _product = new Product("Produto 1", 10, true);
+        private readonly Discount _discount = new Discount(10, DateTime.Now.AddDays(5));
 
 
         [TestMethod]
         [TestCategory("Domain")]
-        public void Dado_um_Novo_Pedido_Valido_Ele_Deve_Gerar_Um_Numero_Com_8_Caracteres()
+        public void Dado_um_novo_pedido_valido_ele_deve_gerar_um_numero_com_8_caracteres()
         {
             var order = new Order(_customer, 0, null);
-
             Assert.AreEqual(8, order.Number.Length);
         }
 
         [TestMethod]
         [TestCategory("Domain")]
-        public void Dado_um_Novo_Pedido_Seu_Status_Deve_Ser_Aguardando_Pagamento()
+        public void Dado_um_novo_pedido_seu_status_deve_ser_aguardando_pagamento()
         {
-            var order = new Order(_customer, 100, null);
+            var order = new Order(_customer, 0, null);
             Assert.AreEqual(order.Status, EOrderStatus.WaitingPayment);
         }
 
         [TestMethod]
         [TestCategory("Domain")]
-        public void Dado_Um_Pagamento_Do_Pedido_Seu_Status_Deve_Ser_Aguardando_Entrega()
+        public void Dado_um_pagamento_do_pedido_seu_status_deve_ser_aguardando_entrega()
         {
             var order = new Order(_customer, 0, null);
-            order.AddItem(_product, 1);
-            order.Pay(100);
-
+            order.AddItem(_product, 1); // Total deve ser 10
+            order.Pay(10);
             Assert.AreEqual(order.Status, EOrderStatus.WaitingDelivery);
         }
 
+        [TestMethod]
+        [TestCategory("Domain")]
+        public void Dado_um_pedido_cancelado_seu_status_deve_ser_cancelado()
+        {
+            var order = new Order(_customer, 0, null);
+            order.Cancel();
+            Assert.AreEqual(order.Status, EOrderStatus.Canceled);
+        }
+
+        [TestMethod]
+        [TestCategory("Domain")]
+        public void Dado_um_novo_item_sem_produto_o_mesmo_nao_deve_ser_adicionado()
+        {
+            var order = new Order(_customer, 0, null);
+            order.AddItem(null, 10);
+            Assert.AreEqual(order.Items.Count, 0);
+        }
+
+        [TestMethod]
+        [TestCategory("Domain")]
+        public void Dado_um_novo_item_com_quantidade_zero_ou_menor_o_mesmo_nao_deve_ser_adicionado()
+        {
+            var order = new Order(_customer, 0, null);
+            order.AddItem(_product, 0);
+            Assert.AreEqual(order.Items.Count, 0);
+        }
+
+        [TestMethod]
+        [TestCategory("Domain")]
+        public void Dado_um_novo_pedido_valido_seu_total_deve_ser_50()
+        {
+            var order = new Order(_customer, 10, _discount);
+            order.AddItem(_product, 5);
+            Assert.AreEqual(50, order.Total());
+        }
+
+        [TestMethod]
+        [TestCategory("Domain")]
+        public void DadoUmDescontoExpiradoOValorDoPedidoDeveSer60()
+        {
+            var expiredDiscount = new Discount(10, DateTime.Now.AddDays(-5));
+            var order = new Order(_customer, 10, expiredDiscount);
+            order.AddItem(_product, 5);
+            Assert.AreEqual(60, order.Total());
+        }
     }
 }
