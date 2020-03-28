@@ -89,5 +89,42 @@ namespace Store.Tests.Entities
             order.AddItem(_product, 5);
             Assert.AreEqual(60, order.Total());
         }
+
+        [TestMethod]
+        [TestCategory("Domain")]
+        public void DadoUmDescontoInvalidoOValorDoPedidoDeveSer60()
+        {
+            var order = new Order(_customer, 10, null);
+            order.AddItem(_product, 5);
+            Assert.AreEqual(60, order.Total());
+        }
+
+        [TestMethod]
+        [TestCategory("Domain")]
+        public void DadoUmDescontoDe10OValorDoPedidoDeveSer50()
+        {
+            var order = new Order(_customer, 10, _discount);
+            order.AddItem(_product, 5);
+            Assert.AreEqual(50, order.Total());
+        }
+
+        [TestMethod]
+        [TestCategory("Domain")]
+        public void DadoUmaTaxaDeEntregDeValor10OValorDoPedidoDeveSer60()
+        {
+            var order = new Order(_customer, 10, _discount);
+            order.AddItem(_product, 6);
+            Assert.AreEqual(60, order.Total());
+        }
+
+        [TestMethod]
+        [TestCategory("Domain")]
+        public void DadoUmPedidoSemClienteOMesmoTemQueSerInvalido()
+        {
+            var order = new Order(null, 10, _discount);
+            Assert.AreEqual(false, order.Valid);
+        }
+
+
     }
 }
